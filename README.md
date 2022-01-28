@@ -10,10 +10,14 @@ Blood pressure by using PIC16F887 in protes and MPLAB
 ////////////////Port that use in this project////////////////
 
 RA0 as increase button
+
 RA1 as decrease button
+
 RB1 as buzzer output
+
 RC0,RC1,RD0,RD1,RD2,RD3 as LCD display 
-RE3 as master clearbutton
+
+RE3 as master clear button
 
 ////////////////How This Project Works////////////////
 1. When the circuit are power on the LCD will display normal blodd presure (assume 4mmHG as normal) in this scenario.
