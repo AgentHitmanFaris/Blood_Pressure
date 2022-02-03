@@ -34,87 +34,151 @@
 #include "lcd.h"
 
 void main() {
-    int inc = 4;
-    char str1[5];
-    TRISA = 0xFF; 
-    ANSEL = 0x00;  
+    unsigned int myADC;
+    float mypos,myneg,myresult;
+    int inc = 4, mode = 1;
+    char str1[5],str2[10];
+    TRISA = 0xFF;
+    ANSEL = 0x01;  
     TRISC = 0x00;
     TRISB = 0x00;
     TRISD = 0x00; 
-    OSCCON = 0x75;   
+    OSCCON = 0x75;  
+    ADCON0 = 0b11000001;
+    ADCON1 = 0b10000000;
     Lcd_Init();
     Lcd_Clear();
     PORTBbits.RB1 = 1;
 while(1)
-{ 
-     if(PORTAbits.RA0 == 0)
-   {
-       __delay_ms(200);
-       if(PORTAbits.RA0 == 0)
-       {           
-        if(inc>=300)
-         {
-            inc=0;
-            Lcd_Clear();
-         }
-          else
-          {
-             inc++;
-          }
-       }
-   }
-
-    if (PORTAbits.RA1 == 0) 
+{
+    //temp
+    ADCON0 = 0b11000001; //AN0 selected
+    __delay_ms (100);
+    ADCON0bits.GO_nDONE = 1;
+    while(ADCON0bits.GO_nDONE);
     {
-    __delay_ms(100); //to eliminate bouncing effect 
-    if (PORTAbits.RA1 == 0) 
-    { 
-        if (inc <=0)
+        myADC =(ADRESH<<8)+ADRESL;
+        mypos = ((float)myADC *5)/10.24;
+    }
+    ADCON0 = 0b11000101; //AN1 selected
+    __delay_ms (100);
+    ADCON0bits.GO_nDONE = 1;
+    while(ADCON0bits.GO_nDONE);
+    {
+        myADC = (ADRESH<<8)+ADRESL;
+        myneg = ((float)myADC *5)/10.24;
+    }
+    myresult = mypos-myneg ;
+    sprintf(str2, "%.1f", myresult );
+    
+    //button counting up
+    if(PORTAbits.RA2 == 0)
+    {
+        __delay_ms(200);
+        if(PORTAbits.RA2 == 0)
         {
-            inc = 0;
-            Lcd_Clear();
+            if(inc>=300)
+            {
+                inc=0;
+                Lcd_Clear();
+            }
+            else
+            {
+                inc++;
+            }
         }
-        else
+    }
+    //button counting down
+    if (PORTAbits.RA3 == 0) 
+    {
+        __delay_ms(100); //to eliminate bouncing effect 
+        if (PORTAbits.RA3 == 0 ) 
         {
-            inc--;
-        } 
+            if (inc <=0)
+            {
+                inc = 0;
+                Lcd_Clear();
+            }
+            else
+            {
+                inc--;
+            } 
+        }
     }
+    //mode button counting up
+    if (PORTAbits.RA4 == 0) 
+    {
+        __delay_ms(100); //to eliminate bouncing effect 
+        if (PORTAbits.RA4 == 0) 
+        { 
+            if (mode > 2)
+            {
+                mode = 1;
+                Lcd_Clear();
+            }
+            else
+            {
+                mode++;
+            } 
+        }
     }
-
-
-    sprintf(str1, "%d", inc); //to convert from number to string
-    Lcd_Set_Cursor(1,1); 
-    Lcd_Write_String("Pressure:");
-    Lcd_Write_String(str1);
-    Lcd_Write_String("mmHg");
-    Lcd_Write_String("       ");
+    
+    sprintf(str1,"%d",inc);
     
     //check value to blood pressure in high
-    if(inc>10)
+    if(inc>10 && mode == 1)
     {
+        Lcd_Set_Cursor(1,1); 
+        Lcd_Write_String("Pressure:");
+        Lcd_Write_String(str1);
+        Lcd_Write_String("mmHg");
+        Lcd_Write_String("       ");
         PORTBbits.RB1=0;
         Lcd_Set_Cursor(2,1); 
         Lcd_Write_String("High");
         Lcd_Write_String("       ");
+
     }
-    //check value to blood pressure  in normal
-    if(inc<10 && inc > 3)
+    //check value to blood pressure in normal
+    if(inc<10 && inc > 3 && mode == 1)
     {
+        Lcd_Set_Cursor(1,1); 
+        Lcd_Write_String("Pressure:");
+        Lcd_Write_String(str1);
+        Lcd_Write_String("mmHg");
+        Lcd_Write_String("       ");
         PORTBbits.RB1=1;
         Lcd_Set_Cursor(2,1); 
         Lcd_Write_String("Normal");
         Lcd_Write_String("       ");
     }
-    //check value to blood pressure  in low
-    if (inc<3)
+    //check value to blood pressure in low
+    if (inc<3 && mode == 1)
     {
+        Lcd_Set_Cursor(1,1); 
+        Lcd_Write_String("Pressure:");
+        Lcd_Write_String(str1);
+        Lcd_Write_String("mmHg");
         PORTBbits.RB1=1;
-        Lcd_Set_Cursor(2,1); 
+        Lcd_Set_Cursor(2,1);
         Lcd_Write_String("Low");
         Lcd_Write_String("       ");
-    
     }
-} 
+    
+    //for temperature mode
+    if(mode >= 2)
+    {
+        PORTBbits.RB1=1;
+        inc = 4;
+        Lcd_Clear();
+        Lcd_Set_Cursor(1,1);
+        Lcd_Write_String("Temp: ");
+        Lcd_Write_String(str2);
+        Lcd_Write_Char (233);
+        Lcd_Write_Char('C');        
+    }
+
+} //end while
 } // end main
 
 
