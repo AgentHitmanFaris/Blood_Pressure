@@ -69,7 +69,7 @@ while(1)
         myneg = ((float)myADC *5)/10.24;
     }
     myresult = mypos-myneg ;
-    sprintf(str2, "%.1f", myresult );
+    sprintf(str2, "%d", myresult );
     
     //button counting up
     if(PORTAbits.RA2 == 0)
